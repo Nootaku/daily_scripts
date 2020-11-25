@@ -27,29 +27,30 @@
 # ============================================================================
 
 
-PATH_TO_CONFIG='/home/nootaku/VPN/protonVPN.config' 
+PATH_TO_AUTH='/etc/openvpn/auth.txt'
 
 # Verify if .config file exists:
-if [ -f $PATH_TO_CONFIG ]; then
-	. $PATH_TO_CONFIG
-	USERNAME="$username"
-	PASSWORD="$password"
+if [ -f $PATH_TO_AUTH ]; then
+	echo "Credentials found in 'auth.txt'"
 else
 	echo "Could not find .config file at given path."
-	echo "Would you like to create one [1] or browse for existing .config file [2] ?"
-	USERNAME="foo"
-	PASSWORD="bar"
+	read -p "Would you like to create one [1] or browse for existing .config file [2] ? => " credentials
+	if [ $credentials -eq 1 ]; then
+		read -p "Username: " USERNAME
+		read -sp "Password: " PASSWORD
+		sudo echo $USERNAME >> $PATH_TO_AUTH
+		sudo echo $PASSWORD >> $PATH_TO_AUTH
+        cat $PATH_TO_AUTH
+	else
+		echo "Option still to be done"
+	fi
 fi
 
 
 if [ $1 -eq "ls" ]; then
 	echo "LS input"
 else
-	# Launch OpenVPN with user-input OVPN config file:
-	sudo openvpn $1
-	expect "Enter Auth Username: "
-	send $USERNAME
-	expect "Enter Auth Password: "
-	send $PASSWORD
+	# Launch OpenVPN with user-input OVPN config file.
+	sudo openvpn --config $1 --auth-user-pass $PATH_TO_AUTH
 fi
 
